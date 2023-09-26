@@ -1,5 +1,5 @@
 const pg = require('pg');
-const client = new pg.Client('postgres://localhost/fullstack_template_db');
+const client = new pg.Client('postgres://localhost/the_vacation_planner_db');
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -20,8 +20,38 @@ const init = async()=> {
   await client.connect();
   console.log('connected to database');
   const SQL = `
-    SQL SETUP AND SEED
+    DROP TABLE IF EXISTS vacations;
+    DROP TABLE IF EXISTS users;
+    DROP TABLE IF EXISTS places;
+    CREATE TABLE users(
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) UNIQUE
+    );
+    CREATE TABLE places(
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100)
+    );
+    CREATE TABLE vacations(
+      id SERIAL PRIMARY KEY,
+      place_id INTEGER REFERENCES places(id) NOT NULL,
+      user_id INTEGER REFERENCES users(id) NOT NULL
+    );
+    INSERT INTO users(name) VALUES ('moe');
+    INSERT INTO users(name) VALUES ('larry');
+    INSERT INTO users(name) VALUES ('lucy');
+    INSERT INTO users(name) VALUES ('ethyl');
+    INSERT INTO users(name) VALUES ('curly');
+    INSERT INTO users(name) VALUES ('prof');
+    INSERT INTO places(name) VALUES ('ICELAND');
+    INSERT INTO places(name) VALUES ('COSTA RICA');
+    INSERT INTO places(name) VALUES ('DALLAS');
+    INSERT INTO places(name) VALUES ('MOUNT VERNON');
+    INSERT INTO vacations(user_id, place_id) VALUES (
+      (SELECT id FROM users WHERE name='lucy'),
+      (SELECT id FROM places WHERE name='ICELAND')
+    );
   `;
+  await client.query(SQL);
   console.log('create your tables and seed data');
 
   const port = process.env.PORT || 3000;
