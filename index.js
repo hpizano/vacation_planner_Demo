@@ -2,6 +2,7 @@ const pg = require('pg');
 const client = new pg.Client('postgres://localhost/the_vacation_planner_db');
 const express = require('express');
 const app = express();
+app.use(express.json());
 const path = require('path');
 
 const homePage = path.join(__dirname, 'index.html');
@@ -52,6 +53,32 @@ app.get('/api/vacations', async(req, res, next)=> {
     `;
     const response = await client.query(SQL);
     res.send(response.rows);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
+app.post('/api/vacations', async(req, res, next)=> {
+  try{
+    const SQL = `
+      INSERT INTO vacations(user_id, place_id) VALUES($1, $2) RETURNING *
+    `;
+    const response = await client.query(SQL, [ req.body.user_id, req.body.place_id ]);
+    res.send(response.rows[0]);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
+app.delete('/api/vacations/:id', async(req, res, next)=> {
+  try{
+    const SQL = `
+      DELETE FROM vacations WHERE id = $1
+    `;
+    await client.query(SQL, [ req.params.id ]);
+    res.sendStatus(204);
   }
   catch(ex){
     next(ex);

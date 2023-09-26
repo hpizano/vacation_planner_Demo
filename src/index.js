@@ -2,6 +2,45 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import axios from 'axios';
 
+const VacationForm = ({ places, users, bookVacation })=> {
+  const [placeId, setPlaceId] = useState('');
+  const [userId, setUserId] = useState('');
+
+  const save = (ev)=> {
+    ev.preventDefault();
+    const vacation = {
+      user_id: userId,
+      place_id: placeId
+    };
+    bookVacation(vacation);
+  }
+  return (
+    <form onSubmit={ save }>
+      <select value={ userId } onChange={ ev => setUserId(ev.target.value)}>
+        <option value=''>-- choose a user --</option>
+        {
+          users.map( user => {
+            return (
+              <option key={ user.id } value={ user.id }>{ user.name }</option>
+            );
+          })
+        }
+      </select>
+      <select value={ placeId } onChange={ ev => setPlaceId(ev.target.value)}>
+        <option value=''>-- choose a place --</option>
+        {
+          places.map( place => {
+            return (
+              <option key={ place.id } value={ place.id }>{ place.name }</option>
+            );
+          })
+        }
+      </select>
+      <button disabled={ !placeId || !userId }>Book Vacation</button>
+    </form>
+  );
+}
+
 const Users = ({ users, vacations })=> {
   return (
     <div>
@@ -22,7 +61,7 @@ const Users = ({ users, vacations })=> {
   );
 };
 
-const Vacations = ({ vacations, places })=> {
+const Vacations = ({ vacations, places, cancelVacation })=> {
   return (
     <div>
       <h2>Vacations ({ vacations.length })</h2>
@@ -36,6 +75,7 @@ const Vacations = ({ vacations, places })=> {
                 <div> 
                   to { place ? place.name : '' }
                 </div>
+                <button onClick={()=> cancelVacation(vacation)}>Cancel</button>
               </li>
             );
           })
@@ -94,11 +134,26 @@ const App = ()=> {
     fetchData();
   }, []);
 
+  const bookVacation = async(vacation)=> {
+    const response = await axios.post('/api/vacations', vacation);
+    setVacations([...vacations, response.data]);
+  }
+
+  const cancelVacation = async(vacation)=> {
+    await axios.delete(`/api/vacations/${vacation.id}`);
+    setVacations(vacations.filter(_vacation => _vacation.id !== vacation.id));
+  }
+
   return (
     <div>
       <h1>Vacation Planner</h1>
+      <VacationForm places={ places } users={ users } bookVacation={ bookVacation }/>
       <main>
-        <Vacations vacations={ vacations } places={ places }/>
+        <Vacations
+          vacations={ vacations }
+          places={ places }
+          cancelVacation={ cancelVacation }
+        />
         <Users users={ users } vacations={ vacations }/>
         <Places places={ places } vacations={ vacations }/>
       </main>
