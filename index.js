@@ -16,6 +16,48 @@ app.get('/dist/main.js.map', (req, res)=> res.sendFile(reactSourceMap));
 const styleSheet = path.join(__dirname, 'styles.css');
 app.get('/styles.css', (req, res)=> res.sendFile(styleSheet));
 
+app.get('/api/users', async(req, res, next)=> {
+  try{
+    const SQL = `
+      SELECT *
+      FROM users
+    `;
+    const response = await client.query(SQL);
+    res.send(response.rows);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
+app.get('/api/places', async(req, res, next)=> {
+  try{
+    const SQL = `
+      SELECT *
+      FROM places
+    `;
+    const response = await client.query(SQL);
+    res.send(response.rows);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
+app.get('/api/vacations', async(req, res, next)=> {
+  try{
+    const SQL = `
+      SELECT *
+      FROM vacations
+    `;
+    const response = await client.query(SQL);
+    res.send(response.rows);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
 const init = async()=> {
   await client.connect();
   console.log('connected to database');
@@ -34,7 +76,8 @@ const init = async()=> {
     CREATE TABLE vacations(
       id SERIAL PRIMARY KEY,
       place_id INTEGER REFERENCES places(id) NOT NULL,
-      user_id INTEGER REFERENCES users(id) NOT NULL
+      user_id INTEGER REFERENCES users(id) NOT NULL,
+      created_at TIMESTAMP DEFAULT now()
     );
     INSERT INTO users(name) VALUES ('moe');
     INSERT INTO users(name) VALUES ('larry');
