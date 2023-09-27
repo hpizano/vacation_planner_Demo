@@ -5,15 +5,24 @@ import axios from 'axios';
 const VacationForm = ({ places, users, bookVacation })=> {
   const [placeId, setPlaceId] = useState('');
   const [userId, setUserId] = useState('');
-
-  const save = (ev)=> {
+  const [notes, setNotes] = useState('');
+  
+  const save = async(ev)=> {
     ev.preventDefault();
     const vacation = {
       user_id: userId,
-      place_id: placeId
+      place_id: placeId,
+      _notes: notes
     };
-    bookVacation(vacation);
+
+    console.log(vacation._notes)
+    
+    await bookVacation(vacation);
+    setPlaceId('');
+    setUserId('');
+    setNotes('');
   }
+
   return (
     <form onSubmit={ save }>
       <select value={ userId } onChange={ ev => setUserId(ev.target.value)}>
@@ -36,7 +45,11 @@ const VacationForm = ({ places, users, bookVacation })=> {
           })
         }
       </select>
-      <button disabled={ !placeId || !userId }>Book Vacation</button>
+      
+       <label htmlFor='note'> --- A note is required --- </label>
+       <textarea value= { notes } onChange = {ev => setNotes(ev.target.value)}/>
+       
+      <button disabled={ !placeId || !userId || !notes } >Book Vacation</button>
     </form>
   );
 }
@@ -61,7 +74,7 @@ const Users = ({ users, vacations })=> {
   );
 };
 
-const Vacations = ({ vacations, places, cancelVacation })=> {
+const Vacations = ({ vacations, places, users, cancelVacation })=> {
   return (
     <div>
       <h2>Vacations ({ vacations.length })</h2>
@@ -69,11 +82,16 @@ const Vacations = ({ vacations, places, cancelVacation })=> {
         {
           vacations.map( vacation => {
             const place = places.find(place => place.id === vacation.place_id);
+            const user = users.find( user => user.id === vacation.user_id);
+            const note = vacations.find( vacation => vacation._notes === vacation.note);
             return (
               <li key={ vacation.id }>
                 { new Date(vacation.created_at).toLocaleString() }
                 <div> 
-                  to { place ? place.name : '' }
+                  { user ? user.name : ''} to { place ? place.name : '' }
+                  <p>
+                  { vacation ? vacation._notes:'' }
+                  </p>
                 </div>
                 <button onClick={()=> cancelVacation(vacation)}>Cancel</button>
               </li>
@@ -151,6 +169,7 @@ const App = ()=> {
       <main>
         <Vacations
           vacations={ vacations }
+          users={ users }
           places={ places }
           cancelVacation={ cancelVacation }
         />
